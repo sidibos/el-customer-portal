@@ -1,65 +1,162 @@
----
-noteId: "fa77b6a0021e11f182292da699c4df4d"
-tags: []
+# Customer Self-Service Portal (Laravel 12 + Sail + Inertia React)
+
+A simplified customer self-service portal built with **Laravel 12**, **MySQL**, **REST API**, and **Inertia (React) + react-bootstrap**.
+
+The application exposes:
+- **REST API** under `/api/*` (protected by Sanctum personal access tokens)
+- **Portal UI** served by Laravel using **Inertia React**
+
+Auth approach:
+- Portal login uses **Sanctum personal access tokens** stored in an **HttpOnly cookie** (`portal_token`)
+- API requests from the portal reuse the same `/api/*` endpoints via a cookie → Bearer middleware bridge
+- No tokens stored in localStorage
 
 ---
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Requirements
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+- Docker Desktop
+- Node.js 18+
+- Git
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Tech Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Backend: Laravel 12
+- Frontend: Inertia + React + react-bootstrap
+- Database: MySQL (Laravel Sail)
+- Auth: Laravel Sanctum (Personal Access Tokens)
+- Testing: PHPUnit
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Project Setup (Laravel Sail)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 1. Clone the repository
+```bash
+git clone https://github.com/sidibos/el-customer-portal
+cd el-customer-portal
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 2. Environment setup
+```bash
+cp .env.example .env
+```
 
-## Laravel Sponsors
+### 3. Install PHP dependencies
+```bash
+composer install
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Or via Sail:
+```bash
+./vendor/bin/sail composer install
+```
 
-### Premium Partners
+### 4. Start Sail containers
+```bash
+./vendor/bin/sail up -d
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 5. Generate application key
+```bash
+./vendor/bin/sail artisan key:generate
+```
 
-## Contributing
+### 6. Run migrations and seeders
+```bash
+./vendor/bin/sail artisan migrate --seed
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+To reset completely:
+```bash
+./vendor/bin/sail artisan migrate:fresh --seed
+```
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Frontend Setup
 
-## Security Vulnerabilities
+### 7. Install Node dependencies
+```bash
+./vendor/bin/sail npm install
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 8. Start Vite dev server
+```bash
+./vendor/bin/sail npm run dev
+```
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Accessing the App
+
+Always access the portal via Laravel:
+
+- Login: http://localhost/login
+- Dashboard: http://localhost/dashboard
+
+Do NOT open the Vite dev server URL directly.
+
+---
+
+## Seeded Test Users
+
+- Primary User  
+  Email: primary@example.com  
+  Password: password  
+
+- Authorised User  
+  Email: authorized@example.com  
+  Password: password  
+
+---
+
+## Authentication Flow
+
+- Login via `/portal/login`
+- Sanctum personal access token generated
+- Token stored in HttpOnly cookie `portal_token`
+- API requests authenticated via middleware injecting Bearer token
+
+---
+
+## Core API Endpoints
+
+- GET /api/user
+- GET /api/dashboard
+- GET /api/sites
+- GET /api/sites/{site}/meters
+- GET /api/meters/{meter}
+- GET /api/meters/{meter}/consumption?months=6
+- GET /api/sites/{site}/consumption?months=6
+- GET /api/billing-preferences
+- PUT /api/billing-preferences
+- GET /api/contact-details
+- PUT /api/contact-details
+
+---
+
+## Running Tests
+
+```bash
+./vendor/bin/sail artisan test
+```
+
+Run a specific test:
+```bash
+./vendor/bin/sail artisan test --filter=ConsumptionEndpointsFeatureTest
+```
+
+---
+
+## Notes
+
+- All API calls from React are made explicitly to `/api/*`
+- Inertia pages live in `resources/js/Pages`
+- Shared layout: `resources/js/Components/AppLayout.jsx`
+- Charts use Bootstrap-only rendering
+
+---
+
